@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ann's Recovery</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117; --bg2: #161b22; --border: rgba(255,255,255,0.08);
+    --text: #e6e1d8; --muted: #6b7280;
+    --body-c: #4ade80; --mind-c: #60a5fa; --soul-c: #e879f9; --fin-c: #fbbf24;
+    --danger: #f87171; --challenge-c: #fb923c;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Georgia', serif; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(22,27,34,0.96); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border); padding: 18px 20px 14px;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .header-label { font-family: monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--mind-c); text-transform: uppercase; margin-bottom: 3px; }
+  .header-title { font-size: 20px; font-weight: 600; color: #f0ece4; }
+  .header-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .header-pct { font-family: monospace; font-size: 30px; font-weight: 500; text-align: right; }
+  .header-pts { font-size: 10px; color: var(--muted); text-align: right; font-family: monospace; }
+  .pbar-bg { background: rgba(255,255,255,0.07); border-radius: 4px; height: 5px; overflow: hidden; margin-bottom: 7px; }
+  .pbar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+  .encourage { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  .tabs { display: flex; gap: 6px; padding: 14px 20px 0; }
+  .tab {
+    flex: 1; padding: 8px 0; border-radius: 8px; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03); color: var(--muted);
+    font-size: 11px; font-family: monospace; letter-spacing: 0.1em;
+    text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+  }
+  .tab.active { border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.12); color: var(--mind-c); }
+
+  .content { padding: 18px 20px 100px; max-width: 520px; margin: 0 auto; }
+
+  /* DAILY CHALLENGE */
+  .challenge-card {
+    background: linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.04));
+    border: 1px solid rgba(251,146,60,0.35); border-radius: 14px;
+    padding: 16px 18px; margin-bottom: 20px;
+  }
+  .challenge-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .challenge-label { font-family: monospace; font-size: 10px; color: var(--challenge-c); text-transform: uppercase; letter-spacing: 0.15em; }
+  .challenge-day-badge { font-family: monospace; font-size: 10px; color: rgba(251,146,60,0.6); background: rgba(251,146,60,0.1); padding: 2px 8px; border-radius: 20px; }
+  .challenge-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .challenge-num { font-family: monospace; font-size: 11px; color: var(--challenge-c); flex-shrink: 0; margin-top: 2px; }
+  .challenge-text { font-size: 13.5px; line-height: 1.5; color: #f0ece4; }
+  .challenge-dur { font-family: monospace; font-size: 10px; color: rgba(251,146,60,0.7); margin-top: 2px; }
+  .challenge-done-btn {
+    width: 100%; margin-top: 8px; padding: 8px;
+    background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.25);
+    border-radius: 8px; color: var(--challenge-c); font-family: monospace;
+    font-size: 11px; letter-spacing: 0.08em; cursor: pointer; text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .challenge-done-btn.done { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.3); color: var(--body-c); }
+
+  /* PILLAR GRID */
+  .pillar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .pillar-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+  .pillar-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .pillar-name { font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; }
+  .pillar-sc { font-family: monospace; font-size: 11px; color: var(--muted); }
+  .pillar-bar-bg { background: rgba(255,255,255,0.07); border-radius: 3px; height: 4px; }
+  .pillar-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+  /* SECTION */
+  .section { margin-bottom: 22px; }
+  .section-label { font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 10px; padding-bottom: 7px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+  /* TASK */
+  .task {
+    display: flex; align-items: flex-start; gap: 11px;
+    padding: 11px 13px; border-radius: 10px;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.025);
+    margin-bottom: 6px; cursor: pointer; transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent; position: relative;
+  }
+  .task.done { background: rgba(255,255,255,0.015); border-color: rgba(255,255,255,0.05); }
+  .chk {
+    width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; margin-top: 1px;
+    border: 2px solid rgba(255,255,255,0.2); background: transparent;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 11px;
+  }
+  .task-body { flex: 1; }
+  .task-label { font-size: 13px; line-height: 1.45; transition: all 0.2s; }
+  .task.done .task-label { color: var(--muted); text-decoration: line-through; }
+  .task-meta { display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap; }
+  .task-pts { font-family: monospace; font-size: 10px; }
+  .task-daybadge { font-family: monospace; font-size: 9px; padding: 1px 6px; border-radius: 10px; background: rgba(255,255,255,0.06); color: var(--muted); }
+  .task-info { font-size: 16px; color: #444; padding: 0 2px; cursor: pointer; line-height: 1; flex-shrink: 0; }
+  .tooltip {
+    display: none; position: absolute; right: 8px; top: calc(100% + 4px); z-index: 20;
+    background: #1e2535; border-radius: 8px; padding: 10px 13px;
+    font-size: 12px; color: #b0a898; line-height: 1.55; max-width: 260px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
+  }
+  .tooltip.show { display: block; }
+
+  /* WEEKLY */
+  .weekly-task {
+    display: flex; gap: 12px; align-items: center; padding: 13px 14px;
+    border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.025);
+    margin-bottom: 7px; cursor: pointer; transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .weekly-task.done { background: rgba(74,222,128,0.07); border-color: rgba(74,222,128,0.3); }
+  .weekly-label { font-size: 13.5px; line-height: 1.4; }
+  .weekly-task.done .weekly-label { color: var(--muted); }
+
+  .info-card { background: rgba(255,255,255,0.025); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 18px; }
+  .info-title { font-family: monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 14px; }
+
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 90px; margin-bottom: 6px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 3px; transition: height 0.5s; }
+  .bar-day { font-family: monospace; font-size: 10px; }
+
+  .warn-box { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.22); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; }
+  .warn-title { font-family: monospace; font-size: 10px; color: var(--danger); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px; }
+  .warn-body { font-size: 12px; color: #cc9999; line-height: 1.65; }
+
+  .scripture { background: rgba(232,121,249,0.05); border: 1px solid rgba(232,121,249,0.18); border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 18px; }
+  .scripture-text { font-size: 13px; color: #e879f9; font-style: italic; line-height: 1.7; }
+  .scripture-ref { font-family: monospace; font-size: 10px; color: var(--muted); margin-top: 6px; }
+
+  .fin-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; font-size: 13px; }
+  .fin-key { color: var(--muted); }
+  .fin-val { font-family: monospace; font-weight: 500; }
+
+  .pillar-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .pr-accent { width: 3px; border-radius: 2px; flex-shrink: 0; }
+  .pr-label { font-size: 12px; font-weight: 600; }
+  .pr-desc { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+  .sign-row { display: flex; gap: 9px; align-items: flex-start; margin-bottom: 10px; }
+  .sign-dot { color: var(--body-c); flex-shrink: 0; margin-top: 2px; }
+  .sign-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .reset-btn {
+    display: block; width: 100%; padding: 10px; margin-top: 18px;
+    background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 8px; color: var(--danger); font-family: monospace;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-label">PDD Recovery Protocol</div>
+      <div class="header-title">Ann's Daily Healing</div>
+      <div class="header-sub" id="headerSub"></div>
+    </div>
+    <div>
+      <div class="header-pct" id="headerPct">0%</div>
+      <div class="header-pts" id="headerPts">0/0 pts</div>
+    </div>
+  </div>
+  <div class="pbar-bg"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+  <div class="encourage" id="encourage"></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('today')">Today</button>
+  <button class="tab" onclick="switchTab('weekly')">Weekly</button>
+  <button class="tab" onclick="switchTab('trend')">Trend</button>
+</div>
+
+<div class="content">
+  <div id="tab-today">
+    <div id="challengeCard"></div>
+    <div class="pillar-grid" id="pillarGrid"></div>
+    <div id="taskList"></div>
+    <div class="warn-box">
+      <div class="warn-title">⚠️ Hard Truth: Sleep vs OT</div>
+      <div class="warn-body">Every night past 11pm cuts your brain's speech and memory repair window by 20–30%. OT funds your recovery — it doesn't create it. <strong style="color:var(--danger)">Hard cap: no more than 2 midnight OT nights per week.</strong></div>
+    </div>
+    <div class="scripture"><div class="scripture-text" id="scriptureText"></div><div class="scripture-ref" id="scriptureRef"></div></div>
+  </div>
+
+  <div id="tab-weekly" style="display:none">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">These don't need to happen every day — just once this week.</div>
+    <div id="weeklyList"></div>
+    <div class="info-card" style="margin-top:22px;">
+      <div class="info-title" style="color:var(--mind-c)">Why this protocol works</div>
+      <div id="pillarReasons"></div>
+    </div>
+    <div class="info-card" style="border-color:rgba(251,191,36,0.2);background:rgba(251,191,36,0.03);">
+      <div class="info-title" style="color:var(--fin-c)">💰 Debt Reality Check</div>
+      <div class="fin-row"><span class="fin-key">DCP Debt</span><span class="fin-val" style="color:var(--danger)">$60,000 @ $640/mo</span></div>
+      <div class="fin-row"><span class="fin-key">Moneylender (clear first)</span><span class="fin-val" style="color:var(--fin-c)">$1,500</span></div>
+      <div class="fin-row"><span class="fin-key">Base salary</span><span class="fin-val" style="color:var(--body-c)">$5,949</span></div>
+      <div class="fin-row"><span class="fin-key">OT max</span><span class="fin-val" style="color:var(--body-c)">$7,500</span></div>
+      <div class="fin-row"><span class="fin-key">Rent</span><span class="fin-val" style="color:var(--muted)">$800</span></div>
+      <div class="fin-row" style="border-top:1px solid rgba(255,255,255,0.07);padding-top:9px;margin-top:4px;">
+        <span class="fin-key">Net (base − debt − rent)</span>
+        <span class="fin-val" style="color:var(--mind-c)">~$4,509/mo</span>
+      </div>
+      <div style="font-size:12px;color:#a07840;line-height:1.6;margin-top:12px;border-top:1px solid rgba(251,191,36,0.15);padding-top:12px;">
+        Clear the $1,500 moneylender within 3 months. Short-term high-urgency debt creates disproportionate stress that worsens PDD. Then redirect that payment to DCP principal.
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-trend" style="display:none">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Tasks completed per day — 7-day view</div>
+    <div class="info-card"><div class="bar-chart" id="barChart"></div></div>
+    <div class="info-card">
+      <div class="info-title" style="color:var(--text)">📋 Signs you're healing</div>
+      <div id="healingSigns"></div>
+      <div style="margin-top:14px;font-size:12px;color:var(--muted);font-style:italic;border-top:1px solid var(--border);padding-top:12px;">Recovery from PDD is measured in weeks and months, not days. The tracker isn't for perfection — it's for direction.</div>
+    </div>
+    <button class="reset-btn" onclick="resetToday()">⟳ Reset today's checklist</button>
+  </div>
+</div>
+
+<script>
+// ─── Day helpers ──────────────────────────────────────────────────────
+const TODAY = new Date();
+const DOW = TODAY.getDay(); // 0=Sun,1=Mon,...,6=Sat
+const IS_WEEKEND = DOW === 0 || DOW === 6;
+const IS_WEEKDAY = !IS_WEEKEND;
+const IS_FRIDAY  = DOW === 5;
+const IS_SUNDAY  = DOW === 0;
+const IS_SATURDAY= DOW === 6;
+
+function dayVisible(days) {
+  if (!days || days === "all") return true;
+  if (days === "weekday") return IS_WEEKDAY;
+  if (days === "weekend") return IS_WEEKEND;
+  if (days === "friday")  return IS_FRIDAY;
+  if (days === "sunday")  return IS_SUNDAY;
+  if (days === "saturday")return IS_SATURDAY;
+  return true;
+}
+
+function dayBadge(days) {
+  const map = { weekday:"Mon–Fri", weekend:"Weekends", friday:"Fridays", sunday:"Sundays", saturday:"Saturdays" };
+  return map[days] || "";
+}
+
+// ─── Tasks ────────────────────────────────────────────────────────────
+const TASKS = [
+  // BODY
+  { id:"sleep",      pillar:"body",    label:"Slept 7–8 hrs (no midnight OT tonight)",               pts:3, days:"all",     tip:"Sleep is your #1 medicine. Deep sleep repairs the prefrontal cortex that PDD damages — speech, memory, decisions all live there." },
+  { id:"sunlight",   pillar:"body",    label:"Sunlight / outdoor time ≥ 20 min 🎵",                  pts:2, days:"all",     tip:"Morning light regulates cortisol and serotonin. Bring your music. It counts as therapy." },
+  { id:"movement",   pillar:"body",    label:"Badminton / volleyball / walk — any movement works",    pts:2, days:"all",     tip:"30 min of movement raises BDNF — your brain's own growth hormone. You don't need a sport. A walk counts." },
+  { id:"water",      pillar:"body",    label:"Drank ≥ 8 glasses of water",                           pts:1, days:"all",     tip:"Dehydration worsens brain fog and speech latency. Simple but real." },
+  { id:"plants",     pillar:"body",    label:"Watered chili padi plants 🌶️",                         pts:1, days:"all",     tip:"Tending living things lowers cortisol. It counts as medicine." },
+  { id:"cook",       pillar:"body",    label:"Cooked a real meal (not instant)",                     pts:2, days:"weekend", tip:"You have more time on weekends. Protein, omega-3, B vitamins directly affect neurotransmitter production." },
+
+  // MIND
+  { id:"readaloud",  pillar:"mind",    label:"Read aloud for 5 min — Bible, book, anything",         pts:3, days:"all",     tip:"The most underused speech therapy for PDD. Physically exercises the speech motor cortex every day — non-negotiable." },
+  { id:"datacamp",   pillar:"mind",    label:"DataCamp: 1 full module (you have time today)",        pts:3, days:"weekend", tip:"Weekend = more time = deeper learning. Complete one full module, not just a video." },
+  { id:"aip_wday",   pillar:"mind",    label:"AI / robotrader project — 15 min sprint",              pts:1, days:"weekday", tip:"Short after-work session. Even 15 min of progress keeps the project alive and your sense of purpose intact." },
+  { id:"aip_wknd",   pillar:"mind",    label:"AI / robotrader project — 45 min deep session",       pts:2, days:"weekend", tip:"Weekend gives you real build time. Document what you built, even briefly." },
+  { id:"noscreen",   pillar:"mind",    label:"No phone ≥ 30 min before bed",                        pts:2, days:"all",     tip:"Blue light and scroll loops suppress melatonin and worsen PDD sleep architecture." },
+  { id:"journal",    pillar:"mind",    label:"Wrote 3 sentences about today (any language)",         pts:2, days:"all",     tip:"Expressive writing improves both speech processing and emotional regulation — two things PDD directly attacks." },
+
+  // SOUL
+  { id:"prayer",     pillar:"soul",    label:"Morning prayer / devotion",                            pts:2, days:"all",     tip:"Spiritual anchoring reduces the hopelessness pattern central to PDD." },
+  { id:"gratitude",  pillar:"soul",    label:"Named 3 things I'm grateful for",                     pts:1, days:"all",     tip:"Gratitude practice restructures negative cognitive bias over weeks, not days. Stay consistent." },
+  { id:"cg",         pillar:"soul",    label:"CG tonight — leave Micron on time 🙏",                 pts:3, days:"friday",  tip:"Community is a clinically proven buffer against depression relapse. Don't let OT steal this." },
+  { id:"church",     pillar:"soul",    label:"Church service + AV for Indonesian service ✝️",        pts:3, days:"sunday",  tip:"You serve and receive at the same time. This is one of your strongest recovery pillars." },
+  { id:"rest",       pillar:"soul",    label:"10–20 min real rest (not scrolling — music or silence)",pts:2, days:"all",    tip:"True rest ≠ phone. Your nervous system needs it. Lie down, breathe." },
+
+  // FINANCE
+  { id:"budget",     pillar:"finance", label:"Checked and logged today's spending",                  pts:1, days:"all",     tip:"Debt stress worsens PDD. Visibility reduces the anxiety of the unknown." },
+  { id:"ot",         pillar:"finance", label:"Logged OT hours honestly",                             pts:0, days:"weekday", tip:"Track but don't celebrate. OT funds recovery — it doesn't create it." },
+  { id:"moneylender",pillar:"finance", label:"On track to clear $1,500 moneylender this month",     pts:2, days:"weekend", tip:"High-urgency short-term debt first. The psychological relief when it's gone is real and immediate." },
+];
+
+// ─── Weekly goals ─────────────────────────────────────────────────────
+const WEEKLY = [
+  { id:"therapist",  label:"Spoke to psychologist this week (scheduled, not just 'if needed')", icon:"🩺" },
+  { id:"socialmeal", label:"Had a meal or walk with someone",                                    icon:"👥" },
+  { id:"mscfe",      label:"Did one thing toward MScFE WorldQuant application",                  icon:"🎓" },
+  { id:"reframe",    label:"Noticed a negative thought and reframed it consciously",             icon:"🔄" },
+  { id:"voicemsg",   label:"Sent a voice message to family in Indonesia",                        icon:"📞" },
+];
+
+// ─── Pillar config ────────────────────────────────────────────────────
+const PILLARS = {
+  body:    { label:"Body",    color:"#4ade80", icon:"🌿" },
+  mind:    { label:"Mind",    color:"#60a5fa", icon:"🧠" },
+  soul:    { label:"Soul",    color:"#e879f9", icon:"✝️"  },
+  finance: { label:"Finance", color:"#fbbf24", icon:"💰" },
+};
+
+// ─── Daily challenge pool ─────────────────────────────────────────────
+// Each activity: { text, dur, days:"all"|"weekday"|"weekend", cat }
+const CHALLENGES = [
+  // SPEECH
+  { text:"Read any news headline aloud 5 times, getting faster each round", dur:"5 min", days:"all", cat:"speech" },
+  { text:"Describe what's outside your window out loud for 2 full minutes without stopping", dur:"5 min", days:"all", cat:"speech" },
+  { text:"Record a 60-second voice note about your day and play it back", dur:"5 min", days:"all", cat:"speech" },
+  { text:"Read Psalm 23 aloud 3 times — slower each round, not faster", dur:"7 min", days:"all", cat:"speech" },
+  { text:"Name 20 items you can see right now without pausing more than 2 seconds between each", dur:"3 min", days:"all", cat:"speech" },
+  { text:"Sing along to one full song with the lyrics visible in front of you", dur:"4 min", days:"all", cat:"speech" },
+  { text:"Narrate out loud everything you're doing while you cook or shower — full sentences", dur:"10 min", days:"all", cat:"speech" },
+  { text:"Read your last journal entry aloud, then add 2 sentences about how you feel right now", dur:"7 min", days:"all", cat:"speech" },
+  { text:"Say out loud your full plan for today — every step, in order, no skipping", dur:"3 min", days:"all", cat:"speech" },
+  { text:"Read a recipe aloud completely before you start cooking", dur:"5 min", days:"weekend", cat:"speech" },
+  { text:"Count backwards from 100 by 7s out loud — say it clearly, don't mumble", dur:"5 min", days:"all", cat:"speech" },
+  { text:"Read Matthew 5:3-12 aloud slowly, pause after each verse, then say one word that captures it", dur:"10 min", days:"all", cat:"speech" },
+
+  // COGNITIVE / MATH
+  { text:"Solve mentally: 847 × 6, then 1,293 − 457, then 64 ÷ 8 × 13. Write the answers after.", dur:"8 min", days:"all", cat:"math" },
+  { text:"Calculate: at $640/month toward DCP, how many months until $60K is cleared? Assume no interest change.", dur:"5 min", days:"all", cat:"math" },
+  { text:"Write 5 Python functions from memory without an IDE. Doesn't matter if syntax is off — test your recall.", dur:"10 min", days:"all", cat:"cognitive" },
+  { text:"Estimate your total net worth today: sum all assets, subtract all debts. Write it down honestly.", dur:"10 min", days:"all", cat:"cognitive" },
+  { text:"Write pseudocode for one trading signal in your robotrader: if X then Y, else Z", dur:"10 min", days:"weekday", cat:"cognitive" },
+  { text:"List 10 DataCamp concepts you remember from any lesson — no notes, from memory only", dur:"7 min", days:"all", cat:"cognitive" },
+  { text:"Do a medium Sudoku puzzle — no hints, no shortcuts", dur:"15 min", days:"all", cat:"math" },
+  { text:"Calculate compound interest: $60,000 at 5% annually — what do you owe in 3 years if you only pay minimum?", dur:"8 min", days:"all", cat:"math" },
+  { text:"Write your robotrader's 3 core trading rules from memory, then check if they still make sense", dur:"15 min", days:"weekend", cat:"cognitive" },
+  { text:"Calculate: if you save $500 extra per month from OT, how many months to clear the moneylender AND have $2K buffer?", dur:"8 min", days:"all", cat:"math" },
+  { text:"From memory: write the syntax for a Python dictionary comprehension, list comprehension, and lambda function", dur:"7 min", days:"all", cat:"cognitive" },
+  { text:"Think of one quantitative strategy (mean reversion, momentum, etc.) and write its logic in plain English", dur:"15 min", days:"weekend", cat:"cognitive" },
+
+  // PHYSICAL / BODY
+  { text:"Walk a different route than usual — notice 5 things you've never seen before", dur:"25 min", days:"all", cat:"physical" },
+  { text:"Full body stretch before bed: YouTube '15 minute full body stretch' and follow along", dur:"15 min", days:"all", cat:"physical" },
+  { text:"Walk to the nearest hawker centre or park and back — no destination needed, just move", dur:"20 min", days:"all", cat:"physical" },
+  { text:"10 minutes of deep breathing: inhale 4 counts, hold 7, exhale 8. Repeat. This is not optional.", dur:"10 min", days:"all", cat:"physical" },
+  { text:"Walk barefoot on grass or sand for 10 minutes — grounding is real", dur:"10 min", days:"weekend", cat:"physical" },
+  { text:"Cook the entire meal standing — don't sit until you're done. Physical engagement counts.", dur:"varies", days:"weekend", cat:"physical" },
+  { text:"Set a timer every 60 minutes today and stand up and move for 2 minutes each time", dur:"all day", days:"weekday", cat:"physical" },
+  { text:"Do 10 minutes of light movement the moment you wake up — before the phone, before anything", dur:"10 min", days:"all", cat:"physical" },
+
+  // COOKING / CREATIVE
+  { text:"Cook one dish you've never made before — search a simple recipe and follow it fully", dur:"45 min", days:"weekend", cat:"creative" },
+  { text:"Make a full meal using only ingredients already in your kitchen — no buying anything", dur:"30 min", days:"weekend", cat:"creative" },
+  { text:"Cook an Indonesian dish from memory — no recipe, just what you remember from home", dur:"40 min", days:"weekend", cat:"creative" },
+  { text:"Harvest your chili padi today and incorporate it into whatever you're cooking", dur:"5 min", days:"all", cat:"creative" },
+  { text:"Prepare tomorrow's lunch while cooking tonight's dinner — one extra step of intentionality", dur:"20 min", days:"weekday", cat:"creative" },
+  { text:"Cook something that takes over 1 hour from scratch. Slow cooking = slow thinking = good for PDD.", dur:"60+ min", days:"weekend", cat:"creative" },
+  { text:"Try one new spice combination you've never used before in a familiar dish", dur:"30 min", days:"all", cat:"creative" },
+
+  // FAITH
+  { text:"Read one full Psalm aloud, then write one sentence about what it means specifically for you today", dur:"10 min", days:"all", cat:"faith" },
+  { text:"10 minutes in complete silence — no music, no phone. Just pray or sit with God.", dur:"10 min", days:"all", cat:"faith" },
+  { text:"Write a prayer entirely in your own words — not from memory, not copied. Raw and honest.", dur:"8 min", days:"all", cat:"faith" },
+  { text:"Write 5 specific ways God has been faithful to you this month — not generic, specific moments", dur:"10 min", days:"all", cat:"faith" },
+  { text:"Pray for one person in your CG by name for 5 minutes — not a list, just one person deeply", dur:"5 min", days:"all", cat:"faith" },
+  { text:"Say out loud: one thing you've been holding against yourself, then say 'I forgive myself for this'", dur:"3 min", days:"all", cat:"faith" },
+  { text:"Read Lamentations 3:22-23 slowly. Write why 'new every morning' specifically matters for PDD recovery.", dur:"10 min", days:"all", cat:"faith" },
+  { text:"Read Philippians 4:6-8 and write what 'think about such things' means practically for your week", dur:"10 min", days:"all", cat:"faith" },
+  { text:"Write a short thank-you prayer for something small you usually overlook", dur:"5 min", days:"all", cat:"faith" },
+  { text:"Read Joshua 1:9 aloud 5 times. Then write what 'do not be discouraged' means for your job stress today.", dur:"8 min", days:"weekday", cat:"faith" },
+
+  // SOCIAL
+  { text:"Send a voice message (not text — voice) to one family member in Indonesia", dur:"5 min", days:"all", cat:"social" },
+  { text:"Text one person in your CG right now to ask how they're doing — not a forward, a personal message", dur:"3 min", days:"all", cat:"social" },
+  { text:"Message your psychologist to book a regular weekly slot — not 'when needed', weekly.", dur:"3 min", days:"all", cat:"social" },
+  { text:"Call your closest friend for 10 minutes. No agenda. Don't talk about work or debt.", dur:"10 min", days:"all", cat:"social" },
+  { text:"Tell one person something specific you appreciate about them today", dur:"2 min", days:"weekday", cat:"social" },
+
+  // LEARNING / GROWTH
+  { text:"Read one article about quantitative finance. Set a 15-min timer. Write 3 things you learned.", dur:"20 min", days:"weekend", cat:"learning" },
+  { text:"Research one MScFE WorldQuant University requirement and write it in your notes", dur:"15 min", days:"weekend", cat:"learning" },
+  { text:"Watch one YouTube video (≤15 min) on a trading concept you don't fully understand yet", dur:"15 min", days:"all", cat:"learning" },
+  { text:"Write down 3 things that confused you this week and look one of them up properly", dur:"15 min", days:"all", cat:"learning" },
+  { text:"Find one open-source trading algorithm on GitHub and read its README fully", dur:"20 min", days:"weekend", cat:"learning" },
+  { text:"Write your own definition of 'Sharpe Ratio' and 'Drawdown' without looking them up", dur:"8 min", days:"all", cat:"learning" },
+  { text:"On your commute: listen to a finance/trading podcast instead of music — one full episode", dur:"commute", days:"weekday", cat:"learning" },
+  { text:"Summarise in 3 sentences what you've actually learned this week — be honest, not generous", dur:"5 min", days:"weekend", cat:"learning" },
+  { text:"Write down the next 3 steps you need to take on your AI robotrader project, in order", dur:"10 min", days:"all", cat:"learning" },
+  { text:"During lunch break: walk outside for 15 min, don't eat at your desk, let your mind rest", dur:"15 min", days:"weekday", cat:"learning" },
+];
+
+// ─── Seeded RNG (LCG) ─────────────────────────────────────────────────
+function seededRng(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = Math.imul(1664525, s) + 1013904223 >>> 0;
+    return s / 0xFFFFFFFF;
+  };
+}
+
+function seededShuffle(arr, seed) {
+  const rng = seededRng(seed);
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function getDailyChallenges() {
+  const d = TODAY;
+  // Unique seed per calendar date — changes every day
+  const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  // Filter to appropriate day type
+  const pool = CHALLENGES.filter(c => dayVisible(c.days));
+  // Pick 2 from different categories
+  const shuffled = seededShuffle(pool, seed);
+  const picked = [];
+  const usedCats = new Set();
+  for (const c of shuffled) {
+    if (!usedCats.has(c.cat)) { picked.push(c); usedCats.add(c.cat); }
+    if (picked.length >= 2) break;
+  }
+  // Fallback if not enough unique cats
+  if (picked.length < 2 && shuffled.length > picked.length) picked.push(shuffled[picked.length]);
+  return picked;
+}
+
+// ─── Scriptures (day of week) ─────────────────────────────────────────
+const SCRIPTURES = [
+  { text:"He gives strength to the weary and increases the power of the weak.", ref:"Isaiah 40:29" },
+  { text:"For I know the plans I have for you — plans to prosper you and not to harm you, plans to give you hope and a future.", ref:"Jeremiah 29:11" },
+  { text:"Cast all your anxiety on him because he cares for you.", ref:"1 Peter 5:7" },
+  { text:"I can do all this through him who gives me strength.", ref:"Philippians 4:13" },
+  { text:"The Lord is close to the brokenhearted and saves those who are crushed in spirit.", ref:"Psalm 34:18" },
+  { text:"Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", ref:"Joshua 1:9" },
+  { text:"Come to me, all you who are weary and burdened, and I will give you rest.", ref:"Matthew 11:28" },
+];
+
+const PILLAR_REASONS = [
+  { label:"Sleep",          desc:"Rebuilds the prefrontal cortex — governs speech & memory",    color:"#4ade80" },
+  { label:"Exercise / walk",desc:"Raises BDNF, the brain's own growth hormone",                 color:"#60a5fa" },
+  { label:"Sunlight",       desc:"Resets cortisol and serotonin daily rhythms",                  color:"#fbbf24" },
+  { label:"Read aloud",     desc:"Physically exercises speech motor pathways PDD suppresses",    color:"#fb923c" },
+  { label:"Faith & church", desc:"Purpose and community reduce relapse risk significantly",      color:"#e879f9" },
+  { label:"DataCamp / AI",  desc:"Stimulation without overwhelm rebuilds neural connections",    color:"#22d3ee" },
+  { label:"Journalling",    desc:"Expressive writing improves speech processing & emotion regulation", color:"#a78bfa" },
+];
+
+const HEALING_SIGNS = [
+  "Words come slightly faster in conversation",
+  "You initiate speech instead of waiting to be asked",
+  "You can hold a thought through a whole sentence",
+  "You cook a meal without forgetting a step mid-way",
+  "You feel curious about something — even briefly",
+  "You sleep without waking at 3am with worry",
+  "Reading aloud feels less effortful than last week",
+  "You laugh genuinely at something small",
+  "You start a task without needing to psych yourself up",
+];
+
+// ─── Storage helpers ──────────────────────────────────────────────────
+function todayKey() { return TODAY.toISOString().split("T")[0]; }
+function weekKey() {
+  const d = new Date(TODAY), day = d.getDay();
+  d.setDate(d.getDate() - ((day + 6) % 7));
+  return d.toISOString().split("T")[0];
+}
+
+let STATE = { checked:{}, weeklyChecked:{}, history:{}, challengeDone:{} };
+
+function loadState() {
+  const tk = todayKey(), wk = weekKey();
+  try { STATE.checked = JSON.parse(localStorage.getItem("pdd_d_" + tk) || "{}"); } catch {}
+  try { STATE.weeklyChecked = JSON.parse(localStorage.getItem("pdd_w_" + wk) || "{}"); } catch {}
+  try { STATE.history = JSON.parse(localStorage.getItem("pdd_history") || "{}"); } catch {}
+  try { STATE.challengeDone = JSON.parse(localStorage.getItem("pdd_ch_" + tk) || "{}"); } catch {}
+}
+
+function saveDaily() {
+  const tk = todayKey();
+  localStorage.setItem("pdd_d_" + tk, JSON.stringify(STATE.checked));
+  const count = Object.values(STATE.checked).filter(Boolean).length;
+  STATE.history[tk] = count;
+  localStorage.setItem("pdd_history", JSON.stringify(STATE.history));
+}
+function saveWeekly() { localStorage.setItem("pdd_w_" + weekKey(), JSON.stringify(STATE.weeklyChecked)); }
+function saveChallenge() { localStorage.setItem("pdd_ch_" + todayKey(), JSON.stringify(STATE.challengeDone)); }
+
+// ─── Calculations ─────────────────────────────────────────────────────
+const VISIBLE_TASKS = TASKS.filter(t => dayVisible(t.days));
+function totalPts() { return VISIBLE_TASKS.reduce((s,t) => s + (STATE.checked[t.id] ? t.pts : 0), 0); }
+function maxPts()   { return VISIBLE_TASKS.reduce((s,t) => s + t.pts, 0); }
+function pct()      { const mp = maxPts(); return mp ? Math.round((totalPts()/mp)*100) : 0; }
+function getColor(p){ return p>=75?"#4ade80":p>=45?"#fbbf24":"#f87171"; }
+
+function pillarScore(pk) {
+  const tasks = VISIBLE_TASKS.filter(t => t.pillar === pk);
+  const earned = tasks.reduce((s,t) => s+(STATE.checked[t.id]?t.pts:0), 0);
+  const max = tasks.reduce((s,t) => s+t.pts, 0);
+  return { earned, max, pct: max ? Math.round((earned/max)*100) : 0 };
+}
+
+function getEncouragement(p) {
+  if (p>=85) return "You are healing. This counts.";
+  if (p>=65) return "Strong session. Keep going.";
+  if (p>=40) return "More than half done. Your brain is working.";
+  if (p>=15) return "You showed up. That's not nothing.";
+  return "Start with one. Just one. That's enough.";
+}
+
+// ─── Render ───────────────────────────────────────────────────────────
+const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+function renderHeader() {
+  const p = pct();
+  const dayLabel = IS_WEEKEND ? "🌿 Weekend" : IS_FRIDAY ? "✝️ Friday — CG night" : "⚡ Weekday";
+  document.getElementById("headerSub").textContent =
+    TODAY.toLocaleDateString("en-SG",{day:"numeric",month:"long",year:"numeric"}) + "  ·  " + dayLabel;
+  document.getElementById("headerPct").textContent = p + "%";
+  document.getElementById("headerPct").style.color = getColor(p);
+  document.getElementById("headerPts").textContent = totalPts() + "/" + maxPts() + " pts";
+  document.getElementById("pbarFill").style.width = p + "%";
+  document.getElementById("pbarFill").style.background =
+    p>=70?"linear-gradient(to right,#4ade80,#22c55e)":p>=40?"linear-gradient(to right,#fbbf24,#f59e0b)":"linear-gradient(to right,#f87171,#ef4444)";
+  document.getElementById("encourage").textContent = "\u201c" + getEncouragement(p) + "\u201d";
+}
+
+function renderChallenge() {
+  const challenges = getDailyChallenges();
+  const allDone = challenges.every((_,i) => STATE.challengeDone["c"+i]);
+  let html = `<div class="challenge-card">
+    <div class="challenge-header">
+      <span class="challenge-label">✦ Today's Challenge</span>
+      <span class="challenge-day-badge">${IS_WEEKEND?"Weekend":"Weekday"} · ${DAY_NAMES[DOW]}</span>
+    </div>`;
+  challenges.forEach((c, i) => {
+    html += `<div class="challenge-item">
+      <div class="challenge-num">${i+1}.</div>
+      <div>
+        <div class="challenge-text">${c.text}</div>
+        <div class="challenge-dur">⏱ ${c.dur}</div>
+      </div>
+    </div>`;
+  });
+  html += `<button class="challenge-done-btn ${allDone?"done":""}" onclick="toggleChallenges()" >
+    ${allDone ? "✓ Challenge completed today" : "Mark challenge complete"}
+  </button></div>`;
+  document.getElementById("challengeCard").innerHTML = html;
+}
+
+function toggleChallenges() {
+  const challenges = getDailyChallenges();
+  const allDone = challenges.every((_,i) => STATE.challengeDone["c"+i]);
+  challenges.forEach((_,i) => { STATE.challengeDone["c"+i] = !allDone; });
+  saveChallenge();
+  renderChallenge();
+}
+
+function renderPillarGrid() {
+  document.getElementById("pillarGrid").innerHTML = Object.entries(PILLARS).map(([key,p]) => {
+    const s = pillarScore(key);
+    return `<div class="pillar-card">
+      <div class="pillar-hdr">
+        <span class="pillar-name" style="color:${p.color}">${p.icon} ${p.label}</span>
+        <span class="pillar-sc">${s.earned}/${s.max}</span>
+      </div>
+      <div class="pillar-bar-bg">
+        <div class="pillar-bar-fill" style="width:${s.pct}%;background:${p.color}"></div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+let openTip = null;
+function toggleTip(id, e) {
+  e.stopPropagation();
+  if (openTip && openTip !== id) document.getElementById(openTip)?.classList.remove("show");
+  const el = document.getElementById(id);
+  el?.classList.toggle("show");
+  openTip = el?.classList.contains("show") ? id : null;
+}
+
+function renderTaskList() {
+  let html = "";
+  Object.entries(PILLARS).forEach(([pk, p]) => {
+    const tasks = VISIBLE_TASKS.filter(t => t.pillar === pk);
+    if (!tasks.length) return;
+    html += `<div class="section">
+      <div class="section-label" style="color:${p.color}">${p.icon} ${p.label}</div>`;
+    tasks.forEach(task => {
+      const done = !!STATE.checked[task.id];
+      const badge = dayBadge(task.days);
+      html += `<div class="task ${done?"done":""}" id="task-${task.id}" onclick="toggleTask('${task.id}')">
+        <div class="chk" id="cb-${task.id}" style="border-color:${done?p.color:"rgba(255,255,255,0.2)"};background:${done?p.color:"transparent"}">
+          ${done?"✓":""}
+        </div>
+        <div class="task-body">
+          <div class="task-label">${task.label}</div>
+          <div class="task-meta">
+            ${task.pts>0?`<span class="task-pts" style="color:${p.color}">+${task.pts} pts</span>`:""}
+            ${badge?`<span class="task-daybadge">${badge}</span>`:""}
+          </div>
+        </div>
+        <div class="task-info" onclick="toggleTip('tt-${task.id}',event)">ⓘ</div>
+        <div class="tooltip" id="tt-${task.id}">${task.tip}</div>
+      </div>`;
+    });
+    html += "</div>";
+  });
+  document.getElementById("taskList").innerHTML = html;
+}
+
+function toggleTask(id) {
+  STATE.checked[id] = !STATE.checked[id];
+  saveDaily();
+  renderAll();
+}
+
+function renderWeekly() {
+  document.getElementById("weeklyList").innerHTML = WEEKLY.map(g => {
+    const done = !!STATE.weeklyChecked[g.id];
+    return `<div class="weekly-task ${done?"done":""}" onclick="toggleWeekly('${g.id}')">
+      <div class="chk" style="border-color:${done?"#4ade80":"rgba(255,255,255,0.2)"};background:${done?"#4ade80":"transparent"}">${done?"✓":""}</div>
+      <div class="weekly-label">${g.icon} ${g.label}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("pillarReasons").innerHTML = PILLAR_REASONS.map(r =>
+    `<div class="pillar-row">
+      <div class="pr-accent" style="background:${r.color}"></div>
+      <div><div class="pr-label" style="color:${r.color}">${r.label}</div><div class="pr-desc">${r.desc}</div></div>
+    </div>`
+  ).join("");
+}
+
+function toggleWeekly(id) {
+  STATE.weeklyChecked[id] = !STATE.weeklyChecked[id];
+  saveWeekly();
+  renderWeekly();
+}
+
+function renderTrend() {
+  const last7 = [];
+  for (let i=6; i>=0; i--) {
+    const d = new Date(TODAY); d.setDate(d.getDate()-i);
+    const k = d.toISOString().split("T")[0];
+    last7.push({ k, day: d.toLocaleDateString("en-SG",{weekday:"short"}), count: STATE.history[k]||0 });
+  }
+  const maxC = Math.max(...last7.map(d=>d.count), 1);
+  const tk = todayKey();
+  document.getElementById("barChart").innerHTML = last7.map(d => {
+    const h = Math.max((d.count/maxC)*76, d.count>0?8:3);
+    const isToday = d.k===tk;
+    return `<div class="bar-col">
+      <div class="bar" style="height:${h}px;background:${isToday?"#60a5fa":"rgba(96,165,250,0.3)"}"></div>
+      <div class="bar-day" style="color:${isToday?"#60a5fa":"var(--muted)"}">${d.day}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("healingSigns").innerHTML = HEALING_SIGNS.map(s =>
+    `<div class="sign-row"><span class="sign-dot">○</span><span class="sign-text">${s}</span></div>`
+  ).join("");
+}
+
+function renderScripture() {
+  const s = SCRIPTURES[DOW % SCRIPTURES.length];
+  document.getElementById("scriptureText").textContent = "\u201c" + s.text + "\u201d";
+  document.getElementById("scriptureRef").textContent = s.ref;
+}
+
+function renderAll() {
+  renderHeader(); renderChallenge(); renderPillarGrid();
+  renderTaskList(); renderWeekly(); renderTrend(); renderScripture();
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────
+function switchTab(name) {
+  ["today","weekly","trend"].forEach(t => {
+    document.getElementById("tab-"+t).style.display = t===name?"":"none";
+  });
+  document.querySelectorAll(".tab").forEach((el,i) => {
+    el.classList.toggle("active", ["today","weekly","trend"][i]===name);
+  });
+}
+
+function resetToday() {
+  if (confirm("Reset today's checklist? History is preserved.")) {
+    STATE.checked = {}; STATE.challengeDone = {};
+    saveDaily(); saveChallenge(); renderAll();
+  }
+}
+
+document.addEventListener("click", e => {
+  if (!e.target.classList.contains("task-info") && openTip) {
+    document.getElementById(openTip)?.classList.remove("show");
+    openTip = null;
+  }
+});
+
+loadState();
+renderAll();
+</script>
+</body>
+</html>
