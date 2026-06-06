@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ann's Recovery</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #1f2937;
+    --border: rgba(255,255,255,0.08);
+    --text: #e6e1d8;
+    --muted: #6b7280;
+    --body-c: #4ade80;
+    --mind-c: #60a5fa;
+    --soul-c: #e879f9;
+    --fin-c: #fbbf24;
+    --danger: #f87171;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', Georgia, serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* HEADER */
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    background: linear-gradient(to bottom, #161b22f5, #161b22ee);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 20px 16px;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .header-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--mind-c); text-transform: uppercase; margin-bottom: 4px; }
+  .header-title { font-size: 20px; font-weight: 600; color: #f0ece4; }
+  .header-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .header-pct { font-family: 'DM Mono', monospace; font-size: 30px; font-weight: 500; text-align: right; }
+  .header-pts { font-size: 10px; color: var(--muted); text-align: right; font-family: 'DM Mono', monospace; }
+  .progress-bar-bg { background: rgba(255,255,255,0.07); border-radius: 4px; height: 5px; overflow: hidden; margin-bottom: 8px; }
+  .progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+  .encouragement { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; padding: 14px 20px 0; }
+  .tab {
+    flex: 1; padding: 8px 0; border-radius: 8px; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03); color: var(--muted);
+    font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: 0.1em;
+    text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+  }
+  .tab.active { border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.12); color: var(--mind-c); }
+
+  /* CONTENT */
+  .content { padding: 18px 20px 100px; max-width: 520px; margin: 0 auto; }
+
+  /* PILLAR GRID */
+  .pillar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 22px; }
+  .pillar-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+  .pillar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .pillar-name { font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; }
+  .pillar-score { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .pillar-bar-bg { background: rgba(255,255,255,0.07); border-radius: 3px; height: 4px; }
+  .pillar-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+  /* SECTION */
+  .section-label {
+    font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.15em; margin-bottom: 10px; padding-bottom: 7px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .section { margin-bottom: 24px; }
+
+  /* TASK */
+  .task {
+    display: flex; align-items: flex-start; gap: 11px;
+    padding: 12px 13px; border-radius: 10px;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.025);
+    margin-bottom: 6px; cursor: pointer; transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+  .task.done { background: rgba(255,255,255,0.015); border-color: rgba(255,255,255,0.05); }
+  .checkbox {
+    width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; margin-top: 1px;
+    border: 2px solid rgba(255,255,255,0.2); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; font-size: 11px;
+  }
+  .task-body { flex: 1; }
+  .task-label { font-size: 13.5px; line-height: 1.45; transition: all 0.2s; }
+  .task.done .task-label { color: var(--muted); text-decoration: line-through; }
+  .task-pts { font-family: 'DM Mono', monospace; font-size: 10px; margin-top: 2px; }
+  .task-info { font-size: 18px; color: var(--muted); padding: 0 2px; cursor: pointer; line-height: 1; flex-shrink: 0; }
+  .tooltip {
+    display: none; position: absolute; right: 8px; top: calc(100% + 4px); z-index: 20;
+    background: #1e2535; border-radius: 8px; padding: 10px 13px;
+    font-size: 12px; color: #b0a898; line-height: 1.55; max-width: 260px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
+    font-family: 'Lora', serif;
+  }
+  .tooltip.show { display: block; }
+
+  /* WEEKLY */
+  .weekly-task {
+    display: flex; gap: 12px; align-items: center;
+    padding: 14px 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.025);
+    margin-bottom: 7px; cursor: pointer; transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .weekly-task.done { background: rgba(74,222,128,0.07); border-color: rgba(74,222,128,0.3); }
+  .weekly-label { font-size: 13.5px; line-height: 1.4; }
+  .weekly-task.done .weekly-label { color: var(--muted); }
+
+  /* INFO CARD */
+  .info-card { background: rgba(255,255,255,0.025); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 18px; }
+  .info-card-title { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 14px; }
+
+  /* BARS CHART */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 90px; margin-bottom: 6px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 3px; transition: height 0.5s; }
+  .bar-day { font-family: 'DM Mono', monospace; font-size: 10px; }
+
+  /* WARNING BOX */
+  .warning-box { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.22); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; }
+  .warning-title { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--danger); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px; }
+  .warning-body { font-size: 12px; color: #cc9999; line-height: 1.65; }
+
+  /* SCRIPTURE */
+  .scripture { background: rgba(232,121,249,0.05); border: 1px solid rgba(232,121,249,0.18); border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 20px; }
+  .scripture-text { font-size: 13px; color: #e879f9; font-style: italic; line-height: 1.7; }
+  .scripture-ref { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 6px; }
+
+  /* FINANCE */
+  .fin-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; font-size: 13px; }
+  .fin-key { color: var(--muted); }
+  .fin-val { font-family: 'DM Mono', monospace; font-weight: 500; }
+  .fin-note { font-size: 12px; color: #a07840; line-height: 1.6; margin-top: 12px; border-top: 1px solid rgba(251,191,36,0.15); padding-top: 12px; }
+
+  /* PILLAR ROW */
+  .pillar-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .pillar-accent { width: 3px; border-radius: 2px; flex-shrink: 0; }
+  .pillar-row-label { font-size: 12px; font-weight: 600; }
+  .pillar-row-desc { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+  /* HEALING SIGNS */
+  .sign-row { display: flex; gap: 9px; align-items: flex-start; margin-bottom: 10px; }
+  .sign-dot { color: var(--body-c); flex-shrink: 0; margin-top: 2px; }
+  .sign-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* RESET BTN */
+  .reset-btn {
+    display: block; width: 100%; padding: 10px; margin-top: 20px;
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 8px; color: var(--danger); font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-label">PDD Recovery Protocol</div>
+      <div class="header-title">Ann's Daily Healing</div>
+      <div class="header-date" id="headerDate"></div>
+    </div>
+    <div>
+      <div class="header-pct" id="headerPct">0%</div>
+      <div class="header-pts" id="headerPts">0/0 pts</div>
+    </div>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="encouragement" id="encouragement"></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('today')">Today</button>
+  <button class="tab" onclick="switchTab('weekly')">Weekly</button>
+  <button class="tab" onclick="switchTab('trend')">Trend</button>
+</div>
+
+<div class="content">
+  <!-- TODAY TAB -->
+  <div id="tab-today">
+    <div class="pillar-grid" id="pillarGrid"></div>
+    <div id="taskList"></div>
+
+    <div class="warning-box">
+      <div class="warning-title">⚠️ Hard Truth: Sleep vs OT</div>
+      <div class="warning-body">
+        Every night past 11pm cuts your brain's speech and memory repair window by 20–30%.
+        OT funds your recovery — it doesn't create it.
+        <strong style="color:var(--danger)">Hard cap: no more than 2 midnight OT nights per week.</strong> Tell your supervisor this is a health boundary.
+      </div>
+    </div>
+
+    <div class="scripture">
+      <div class="scripture-text" id="scriptureText"></div>
+      <div class="scripture-ref" id="scriptureRef"></div>
+    </div>
+  </div>
+
+  <!-- WEEKLY TAB -->
+  <div id="tab-weekly" style="display:none">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">These don't need to happen every day — just once this week.</div>
+    <div id="weeklyList"></div>
+
+    <div class="info-card" style="margin-top:24px;">
+      <div class="info-card-title" style="color:var(--mind-c)">Why this protocol works</div>
+      <div id="pillarReasons"></div>
+    </div>
+
+    <div class="info-card" style="border-color:rgba(251,191,36,0.2);background:rgba(251,191,36,0.04);">
+      <div class="info-card-title" style="color:var(--fin-c)">💰 Debt Reality Check</div>
+      <div class="fin-row"><span class="fin-key">DCP Debt</span><span class="fin-val" style="color:var(--danger)">$60,000 @ $640/mo</span></div>
+      <div class="fin-row"><span class="fin-key">Moneylender (clear first!)</span><span class="fin-val" style="color:var(--fin-c)">$1,500</span></div>
+      <div class="fin-row"><span class="fin-key">Base salary</span><span class="fin-val" style="color:var(--body-c)">$5,949</span></div>
+      <div class="fin-row"><span class="fin-key">OT max</span><span class="fin-val" style="color:var(--body-c)">$7,500</span></div>
+      <div class="fin-row"><span class="fin-key">Rent</span><span class="fin-val" style="color:var(--muted)">$800</span></div>
+      <div class="fin-row" style="border-top:1px solid rgba(255,255,255,0.07);padding-top:9px;margin-top:4px;">
+        <span class="fin-key">Net (base − debt − rent)</span>
+        <span class="fin-val" style="color:var(--mind-c)">~$4,509/mo</span>
+      </div>
+      <div class="fin-note">Clear the $1,500 moneylender within 3 months first. Short-term high-urgency debt creates disproportionate stress that worsens PDD. Then redirect that payment to DCP principal.</div>
+    </div>
+  </div>
+
+  <!-- TREND TAB -->
+  <div id="tab-trend" style="display:none">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Tasks completed per day — 7-day view</div>
+    <div class="info-card">
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title" style="color:var(--text)">📋 Signs you're healing</div>
+      <div id="healingSigns"></div>
+      <div style="margin-top:14px;font-size:12px;color:var(--muted);font-style:italic;border-top:1px solid var(--border);padding-top:12px;">
+        Recovery from PDD is measured in weeks and months, not days. The tracker isn't for perfection — it's for direction.
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetToday()">⟳ Reset today's checklist</button>
+  </div>
+</div>
+
+<script>
+const TASKS = [
+  { id:"sleep",   pillar:"body",    label:"Slept 7–8 hrs (no midnight OT tonight)",          pts:3, tip:"Sleep is your #1 medicine. Every hour of deep sleep repairs the prefrontal cortex that PDD damages." },
+  { id:"sunlight",pillar:"body",    label:"Sunlight walk ≥ 20 min outside 🎵",              pts:2, tip:"Morning light regulates cortisol and serotonin. Bring your music — it counts." },
+  { id:"exercise",pillar:"body",    label:"Badminton / volleyball / active movement",         pts:3, tip:"30 min aerobic exercise raises BDNF — your brain's growth hormone. Clinically equivalent to low-dose antidepressants." },
+  { id:"water",   pillar:"body",    label:"Drank ≥ 8 glasses of water",                     pts:1, tip:"Dehydration worsens brain fog and speech latency significantly." },
+  { id:"plants",  pillar:"body",    label:"Watered chili padi plants 🌶️",                   pts:1, tip:"Tending living things is grounding and reduces cortisol. It counts as medicine." },
+  { id:"cook",    pillar:"body",    label:"Cooked a real meal (not just instant)",           pts:2, tip:"Protein, omega-3, and B vitamins directly affect neurotransmitter production." },
+  { id:"readaloud",pillar:"mind",   label:"Read aloud for 5 min (book, Bible, anything)",   pts:3, tip:"The single most underused speech therapy for PDD. Physically exercises the speech motor cortex — do this every day without fail." },
+  { id:"math",    pillar:"mind",    label:"Solved 1 math problem / DataCamp lesson",        pts:2, tip:"Structured cognitive tasks rebuild working memory gently. Small and consistent beats intense and irregular." },
+  { id:"noscreen",pillar:"mind",    label:"No phone for ≥ 30 min before bed",              pts:2, tip:"Blue light and scroll loops suppress melatonin and worsen PDD sleep architecture." },
+  { id:"journal", pillar:"mind",    label:"Wrote 3 sentences about today (any language)",   pts:2, tip:"Expressive writing improves both speech processing and emotional regulation — two things PDD attacks." },
+  { id:"aiproject",pillar:"mind",   label:"Worked on AI/robotrader project (≥ 15 min)",    pts:1, tip:"Keep the dream alive in small sessions. Purpose is medicine." },
+  { id:"prayer",  pillar:"soul",    label:"Morning prayer / devotion",                      pts:2, tip:"Spiritual anchoring reduces the hopelessness pattern that is central to PDD." },
+  { id:"gratitude",pillar:"soul",   label:"Named 3 things I'm grateful for",               pts:1, tip:"Gratitude practice restructures the brain's negative cognitive bias — over weeks, not days." },
+  { id:"church",  pillar:"soul",    label:"CG / Church / AV service (mark when applicable)",pts:3, tip:"Community is a clinically proven buffer against depression relapse. You serve and receive at the same time." },
+  { id:"rest",    pillar:"soul",    label:"Took a real 10–20 min rest (not scrolling)",    pts:2, tip:"True rest ≠ phone. Lie down, breathe, listen to music quietly. Your nervous system needs it." },
+  { id:"budget",  pillar:"finance", label:"Checked and logged today's spending",            pts:1, tip:"Debt stress worsens PDD. Visibility reduces the anxiety of the unknown." },
+  { id:"moneylender",pillar:"finance",label:"On track to clear $1,500 debt this month",   pts:2, tip:"High-urgency short-term debt first. The psychological relief when it's gone is real." },
+  { id:"ot",      pillar:"finance", label:"Logged OT hours honestly today",                pts:0, tip:"Track but don't celebrate. OT funds your recovery. It doesn't create it." },
+];
+
+const WEEKLY = [
+  { id:"therapist",  label:"Spoke to psychologist / counselor this week",  icon:"🩺" },
+  { id:"socialmeal", label:"Had a meal or walk with someone",              icon:"👥" },
+  { id:"newlearn",   label:"Completed one DataCamp lesson this week",     icon:"📚" },
+  { id:"reframe",    label:"Noticed a negative thought and reframed it",  icon:"🔄" },
+  { id:"mscfe",      label:"Did one thing toward MScFE application",       icon:"🎓" },
+];
+
+const PILLARS = {
+  body:    { label:"Body",    color:"#4ade80", icon:"🌿" },
+  mind:    { label:"Mind",    color:"#60a5fa", icon:"🧠" },
+  soul:    { label:"Soul",    color:"#e879f9", icon:"✝️"  },
+  finance: { label:"Finance", color:"#fbbf24", icon:"💰" },
+};
+
+const SCRIPTURES = [
+  { text:"He gives strength to the weary and increases the power of the weak.", ref:"Isaiah 40:29" },
+  { text:"For I know the plans I have for you, plans to prosper you and not to harm you, plans to give you hope and a future.", ref:"Jeremiah 29:11" },
+  { text:"Cast all your anxiety on him because he cares for you.", ref:"1 Peter 5:7" },
+  { text:"I can do all this through him who gives me strength.", ref:"Philippians 4:13" },
+  { text:"The Lord is close to the brokenhearted and saves those who are crushed in spirit.", ref:"Psalm 34:18" },
+  { text:"Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", ref:"Joshua 1:9" },
+  { text:"Come to me, all you who are weary and burdened, and I will give you rest.", ref:"Matthew 11:28" },
+];
+
+const PILLAR_REASONS = [
+  { label:"Sleep",           desc:"Rebuilds the prefrontal cortex — governs speech & memory",       color:"#4ade80" },
+  { label:"Exercise",        desc:"Raises BDNF, the brain's own growth hormone",                    color:"#60a5fa" },
+  { label:"Sunlight",        desc:"Resets cortisol and serotonin daily rhythms",                    color:"#fbbf24" },
+  { label:"Social",          desc:"Activates mirror neurons → speech recovery",                     color:"#e879f9" },
+  { label:"Faith",           desc:"Purpose and community reduce relapse risk significantly",         color:"#c084fc" },
+  { label:"Read aloud",      desc:"Physically exercises speech motor pathways PDD suppresses",       color:"#fb923c" },
+  { label:"Cognitive work",  desc:"Stimulation without overwhelm rebuilds neural connections",       color:"#22d3ee" },
+];
+
+const HEALING_SIGNS = [
+  "Words come slightly faster in conversation",
+  "You initiate speech instead of waiting to be asked",
+  "You can hold a thought through a whole sentence",
+  "You cook a meal without forgetting a step mid-way",
+  "You feel curious about something — even briefly",
+  "You sleep without waking at 3am with worry",
+  "Reading aloud feels less effortful than last week",
+  "You laugh genuinely at something small",
+];
+
+// ─── State ───────────────────────────────────────────────────────────
+function todayKey() { return new Date().toISOString().split("T")[0]; }
+function weekKey() {
+  const d = new Date(), day = d.getDay();
+  const mon = new Date(d); mon.setDate(d.getDate() - ((day + 6) % 7));
+  return mon.toISOString().split("T")[0];
+}
+
+function loadState() {
+  const tk = todayKey(), wk = weekKey();
+  let checked = {};
+  let weeklyChecked = {};
+  let history = {};
+  try { checked = JSON.parse(localStorage.getItem("pdd_daily_" + tk) || "{}"); } catch {}
+  try { weeklyChecked = JSON.parse(localStorage.getItem("pdd_weekly_" + wk) || "{}"); } catch {}
+  try { history = JSON.parse(localStorage.getItem("pdd_history") || "{}"); } catch {}
+  return { checked, weeklyChecked, history };
+}
+
+let STATE = loadState();
+
+function saveDaily() {
+  localStorage.setItem("pdd_daily_" + todayKey(), JSON.stringify(STATE.checked));
+  const count = Object.values(STATE.checked).filter(Boolean).length;
+  STATE.history[todayKey()] = count;
+  localStorage.setItem("pdd_history", JSON.stringify(STATE.history));
+}
+function saveWeekly() {
+  localStorage.setItem("pdd_weekly_" + weekKey(), JSON.stringify(STATE.weeklyChecked));
+}
+
+// ─── Calculations ─────────────────────────────────────────────────────
+function totalPts() { return TASKS.reduce((s,t) => s + (STATE.checked[t.id] ? t.pts : 0), 0); }
+function maxPts()   { return TASKS.reduce((s,t) => s + t.pts, 0); }
+function pct()      { return Math.round((totalPts() / maxPts()) * 100); }
+
+function pillarScore(p) {
+  const tasks = TASKS.filter(t => t.pillar === p);
+  const earned = tasks.reduce((s,t) => s + (STATE.checked[t.id] ? t.pts : 0), 0);
+  const max = tasks.reduce((s,t) => s + t.pts, 0);
+  return { earned, max, pct: max ? Math.round((earned/max)*100) : 0 };
+}
+
+function getColor(p) {
+  if (p >= 75) return "#4ade80";
+  if (p >= 45) return "#fbbf24";
+  return "#f87171";
+}
+
+function getEncouragement(p) {
+  if (p >= 85) return "You are healing. This counts.";
+  if (p >= 65) return "Strong session. Keep going.";
+  if (p >= 40) return "More than half done. Your brain is working.";
+  if (p >= 15) return "You showed up. That's not nothing.";
+  return "Start with one. Just one. That's enough.";
+}
+
+// ─── Render ───────────────────────────────────────────────────────────
+function renderHeader() {
+  const p = pct(), tp = totalPts(), mp = maxPts();
+  const color = getColor(p);
+  document.getElementById("headerDate").textContent =
+    new Date().toLocaleDateString("en-SG", { weekday:"long", day:"numeric", month:"long" });
+  document.getElementById("headerPct").textContent = p + "%";
+  document.getElementById("headerPct").style.color = color;
+  document.getElementById("headerPts").textContent = tp + "/" + mp + " pts";
+  document.getElementById("progressFill").style.width = p + "%";
+  document.getElementById("progressFill").style.background =
+    p >= 70 ? "linear-gradient(to right, #4ade80, #22c55e)"
+    : p >= 40 ? "linear-gradient(to right, #fbbf24, #f59e0b)"
+    : "linear-gradient(to right, #f87171, #ef4444)";
+  document.getElementById("encouragement").textContent = "\u201c" + getEncouragement(p) + "\u201d";
+}
+
+function renderPillarGrid() {
+  const grid = document.getElementById("pillarGrid");
+  grid.innerHTML = "";
+  Object.entries(PILLARS).forEach(([key, p]) => {
+    const s = pillarScore(key);
+    grid.innerHTML += `
+      <div class="pillar-card">
+        <div class="pillar-header">
+          <span class="pillar-name" style="color:${p.color}">${p.icon} ${p.label}</span>
+          <span class="pillar-score">${s.earned}/${s.max}</span>
+        </div>
+        <div class="pillar-bar-bg">
+          <div class="pillar-bar-fill" style="width:${s.pct}%;background:${p.color}"></div>
+        </div>
+      </div>`;
+  });
+}
+
+let openTooltip = null;
+
+function renderTaskList() {
+  const list = document.getElementById("taskList");
+  list.innerHTML = "";
+  Object.entries(PILLARS).forEach(([pKey, p]) => {
+    const tasks = TASKS.filter(t => t.pillar === pKey);
+    let html = `<div class="section">
+      <div class="section-label" style="color:${p.color}">${p.icon} ${p.label}</div>`;
+    tasks.forEach(task => {
+      const done = !!STATE.checked[task.id];
+      html += `
+        <div class="task ${done ? "done" : ""}" id="task-${task.id}" onclick="toggleTask('${task.id}')">
+          <div class="checkbox" id="cb-${task.id}" style="border-color:${done ? p.color : "rgba(255,255,255,0.2)"};background:${done ? p.color : "transparent"}">
+            ${done ? "✓" : ""}
+          </div>
+          <div class="task-body">
+            <div class="task-label">${task.label}</div>
+            ${task.pts > 0 ? `<div class="task-pts" style="color:${p.color}">+${task.pts} pts</div>` : ""}
+          </div>
+          <div class="task-info" onclick="event.stopPropagation();toggleTooltip('tt-${task.id}')">ⓘ</div>
+          <div class="tooltip" id="tt-${task.id}">${task.tip}</div>
+        </div>`;
+    });
+    html += "</div>";
+    list.innerHTML += html;
+  });
+}
+
+function toggleTooltip(id) {
+  if (openTooltip && openTooltip !== id) {
+    document.getElementById(openTooltip)?.classList.remove("show");
+  }
+  const el = document.getElementById(id);
+  if (el) { el.classList.toggle("show"); openTooltip = el.classList.contains("show") ? id : null; }
+}
+
+function toggleTask(id) {
+  STATE.checked[id] = !STATE.checked[id];
+  saveDaily();
+  renderAll();
+}
+
+function renderWeekly() {
+  const list = document.getElementById("weeklyList");
+  list.innerHTML = "";
+  WEEKLY.forEach(g => {
+    const done = !!STATE.weeklyChecked[g.id];
+    list.innerHTML += `
+      <div class="weekly-task ${done ? "done" : ""}" onclick="toggleWeekly('${g.id}')">
+        <div class="checkbox" style="border-color:${done ? "#4ade80" : "rgba(255,255,255,0.2)"};background:${done ? "#4ade80" : "transparent"}">
+          ${done ? "✓" : ""}
+        </div>
+        <div class="weekly-label">${g.icon} ${g.label}</div>
+      </div>`;
+  });
+
+  const pr = document.getElementById("pillarReasons");
+  pr.innerHTML = "";
+  PILLAR_REASONS.forEach(r => {
+    pr.innerHTML += `
+      <div class="pillar-row">
+        <div class="pillar-accent" style="background:${r.color}"></div>
+        <div>
+          <div class="pillar-row-label" style="color:${r.color}">${r.label}</div>
+          <div class="pillar-row-desc">${r.desc}</div>
+        </div>
+      </div>`;
+  });
+}
+
+function toggleWeekly(id) {
+  STATE.weeklyChecked[id] = !STATE.weeklyChecked[id];
+  saveWeekly();
+  renderWeekly();
+}
+
+function renderTrend() {
+  const chart = document.getElementById("barChart");
+  chart.innerHTML = "";
+  const last7 = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = d.toISOString().split("T")[0];
+    last7.push({ k, day: d.toLocaleDateString("en-SG", { weekday:"short" }), count: STATE.history[k] || 0 });
+  }
+  const maxCount = Math.max(...last7.map(d => d.count), 1);
+  const isToday = (k) => k === todayKey();
+  last7.forEach(d => {
+    const h = Math.max((d.count / maxCount) * 75, d.count > 0 ? 8 : 3);
+    const color = isToday(d.k) ? "#60a5fa" : "rgba(96,165,250,0.3)";
+    chart.innerHTML += `
+      <div class="bar-col">
+        <div class="bar" style="height:${h}px;background:${color}"></div>
+        <div class="bar-day" style="color:${isToday(d.k) ? "#60a5fa" : "var(--muted)"}">${d.day}</div>
+      </div>`;
+  });
+
+  const hs = document.getElementById("healingSigns");
+  hs.innerHTML = "";
+  HEALING_SIGNS.forEach(s => {
+    hs.innerHTML += `<div class="sign-row"><span class="sign-dot">○</span><span class="sign-text">${s}</span></div>`;
+  });
+}
+
+function renderScripture() {
+  const s = SCRIPTURES[new Date().getDay() % SCRIPTURES.length];
+  document.getElementById("scriptureText").textContent = "\u201c" + s.text + "\u201d";
+  document.getElementById("scriptureRef").textContent = s.ref;
+}
+
+function renderAll() {
+  renderHeader();
+  renderPillarGrid();
+  renderTaskList();
+  renderWeekly();
+  renderTrend();
+  renderScripture();
+}
+
+// ─── Tab switching ────────────────────────────────────────────────────
+function switchTab(name) {
+  ["today","weekly","trend"].forEach(t => {
+    document.getElementById("tab-" + t).style.display = t === name ? "" : "none";
+  });
+  document.querySelectorAll(".tab").forEach((el, i) => {
+    el.classList.toggle("active", ["today","weekly","trend"][i] === name);
+  });
+}
+
+// ─── Reset ────────────────────────────────────────────────────────────
+function resetToday() {
+  if (confirm("Reset today's checklist? History is preserved.")) {
+    STATE.checked = {};
+    saveDaily();
+    renderAll();
+  }
+}
+
+// ─── Close tooltip on outside click ──────────────────────────────────
+document.addEventListener("click", (e) => {
+  if (!e.target.classList.contains("task-info") && openTooltip) {
+    document.getElementById(openTooltip)?.classList.remove("show");
+    openTooltip = null;
+  }
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
